@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  qean-mailbox-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: mail
+      POSTGRES_PASSWORD: mail
+      POSTGRES_DB: maildb
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  qean-mailbox-backend:
+    build: ./backend
+    container_name: qean-mailbox-backend
+    environment:
+      DB_URL: postgresql+psycopg2://mail:mail@qean-mailbox-db:5432/maildb
+      SECRET_KEY: "change-me"
+      AES_KEY: "16byteslongkey!!"
+    depends_on:
+      - qean-mailbox-db
+    ports:
+      - "8000:8000"
+
+  qean-mailbox-frontend:
+    build: ./frontend
+    container_name: qean-mailbox-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:8000"
+    depends_on:
+      - qean-mailbox-backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  db_data:
